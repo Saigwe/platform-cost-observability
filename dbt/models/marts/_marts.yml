@@ -1,0 +1,72 @@
+version: 2
+
+models:
+  - name: rpt_ci_reliability
+    description: "REAL. CI reliability per repo on main: success rate, durations, time to green."
+    columns:
+      - name: repo
+        data_tests: [unique, not_null]
+
+  - name: fct_warehouse_daily_credits
+    description: "Credits, dollars, queries and idle hours per warehouse and day."
+    data_tests:
+      - trust_tests.unique_combination:
+          arguments: {columns: [warehouse_name, usage_date]}
+      - trust_tests.reconciles_to:
+          arguments:
+            to: ref('stg_snowflake__metering')
+            measures: {credits: "sum(credits)", metered_hours: "sum(metered_hours)"}
+            to_measures: {metered_hours: "count(*)"}
+            group_by: [warehouse_name]
+            tolerance: 0.000001
+
+  - name: rpt_cost_spikes
+    description: "Warehouse-days far above their own recent median."
+    data_tests:
+      - trust_tests.unique_combination:
+          arguments: {columns: [warehouse_name, spike_date]}
+      - trust_tests.matches_answer_key:
+          arguments: {expected: "source('answer_key', 'cost_spikes')", key_columns: [warehouse_name],
+                      compare_columns: [spike_date]}
+
+  - name: rpt_governance_gaps
+    description: "Warehouses without a spend cap, burning credits idle, or unused for 90 days."
+    data_tests:
+      - trust_tests.unique_combination:
+          arguments: {columns: [warehouse_name, issue]}
+      - trust_tests.matches_answer_key:
+          name: governance_finds_exactly_the_uncapped_warehouses
+          arguments: {expected: "source('answer_key', 'no_monitor')", key_columns: [warehouse_name],
+                      where: "issue = 'no_resource_monitor'"}
+      - trust_tests.matches_answer_key:
+          name: governance_finds_exactly_the_idle_burners
+          arguments: {expected: "source('answer_key', 'idle_burn')", key_columns: [warehouse_name],
+                      where: "issue = 'idle_burn'"}
+      - trust_tests.matches_answer_key:
+          name: governance_finds_exactly_the_unused_warehouses
+          arguments: {expected: "source('answer_key', 'unused')", key_columns: [warehouse_name],
+                      where: "issue = 'unused_90_days'"}
+
+  - name: rpt_cost_by_cost_center
+    data_tests:
+      - trust_tests.unique_combination:
+          arguments: {columns: [cost_center, month]}
+
+  - name: rpt_connector_incidents
+    description: "Stretches with no successful sync for longer than the stale threshold."
+    data_tests:
+      - trust_tests.unique_combination:
+          arguments: {columns: [connector_id, last_success_at]}
+      - trust_tests.matches_answer_key:
+          arguments: {expected: "source('answer_key', 'incidents')", key_columns: [connector_id]}
+
+  - name: rpt_close_alerts
+    description: "Incidents on close-critical connectors that overlap a month-end close window."
+    data_tests:
+      - trust_tests.matches_answer_key:
+          arguments: {expected: "source('answer_key', 'close_alerts')", key_columns: [connector_id, close_month]}
+
+  - name: rpt_connector_health
+    columns:
+      - name: connector_id
+        data_tests: [unique, not_null]

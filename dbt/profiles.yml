@@ -1,0 +1,7 @@
+platform_observability:
+  target: duckdb
+  outputs:
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', '../warehouse/platform.duckdb') }}"
+      threads: 4

@@ -1,0 +1,48 @@
+name: daily
+
+# Every morning: collect new GitHub Actions runs and jobs incrementally, keep the history on the `data` branch, rebuild
+# the warehouse, and publish the digest to the `ops-log` branch. Set the SLACK_WEBHOOK_URL secret to post a summary.
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore the collected history from the data branch
+        run: |
+          if git fetch --depth 1 origin data; then
+            mkdir -p data && git --work-tree=data checkout origin/data -- github && git reset -q
+          fi
+      - name: Collect, generate, load, build, digest, test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: make all
+      - name: Save the history to the data branch and the digest to the ops-log branch
+        run: |
+          publish() {  # publish <branch> <source dir> <path inside branch>
+            tmp=$(mktemp -d)
+            git fetch --depth 1 origin "$1" && git --work-tree="$tmp" checkout "origin/$1" -- . && git reset -q || true
+            mkdir -p "$tmp/$3" && cp -r "$2"/. "$tmp/$3/"
+            cd "$tmp" && git init -q -b "$1" && git add -A
+            git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "daily $(date -u +%F)"
+            git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" "$1"
+            cd - > /dev/null
+          }
+          publish data data/github github
+          publish ops-log data/digests digests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

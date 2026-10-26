@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: stg_github__runs
+    columns:
+      - name: run_id
+        data_tests: [unique, not_null]
+  - name: stg_github__jobs
+    columns:
+      - name: job_id
+        data_tests: [unique, not_null]
+  - name: stg_snowflake__warehouses
+    columns:
+      - name: warehouse_name
+        data_tests: [unique, not_null]
+      - name: cost_center
+        data_tests: [not_null]
+  - name: stg_snowflake__metering
+    data_tests:
+      - trust_tests.unique_combination:
+          arguments: {columns: [warehouse_id, hour_start]}
+    columns:
+      - name: warehouse_name
+        data_tests:
+          - relationships:
+              arguments: {to: ref('stg_snowflake__warehouses'), field: warehouse_name}
+  - name: stg_snowflake__queries
+    columns:
+      - name: query_id
+        data_tests: [unique, not_null]
+  - name: stg_fivetran__connectors
+    columns:
+      - name: connector_id
+        data_tests: [unique, not_null]
+  - name: stg_fivetran__syncs
+    columns:
+      - name: log_id
+        data_tests: [unique, not_null]
+      - name: sync_status
+        data_tests:
+          - accepted_values:
+              arguments: {values: [SUCCESSFUL, FAILURE_WITH_TASK, RESCHEDULED]}

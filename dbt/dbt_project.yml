@@ -1,0 +1,29 @@
+name: platform_observability
+version: "0.1.0"
+config-version: 2
+profile: platform_observability
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: target
+clean-targets: [target, dbt_packages]
+
+vars:
+  # Snowflake list price per credit varies by edition and region; $3.00 is an assumption, change it to your contract rate.
+  credit_price_usd: 3.00
+  # A cost spike: a warehouse-day at least this many times its trailing 28-day median, and above a credit floor.
+  spike_multiple: 3
+  spike_min_credits: 10
+  # A connector incident: no successful sync for longer than max(this many sync intervals, this many minutes).
+  # 3.5 intervals means three failed syncs in a row; two in a row (a gap of about 3 intervals) is normal noise.
+  stale_intervals: 3.5
+  stale_min_minutes: 180
+
+models:
+  platform_observability:
+    staging:
+      +schema: silver
+      +materialized: view
+    marts:
+      +schema: gold
+      +materialized: table

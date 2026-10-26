@@ -1,0 +1,3 @@
+packages:
+  - git: "https://github.com/Saigwe/dbt-trust-tests.git"
+    revision: v0.1.0

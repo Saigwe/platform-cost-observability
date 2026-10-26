@@ -1,0 +1,5 @@
+packages:
+  - git: https://github.com/Saigwe/dbt-trust-tests.git
+    name: trust_tests
+    revision: 47ab8af564caed52858c664da0845e3a35d244aa
+sha1_hash: bd52a39cab944c5ec716286b0ad02fc9fac5c779

@@ -1,0 +1,45 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: bronze
+    tables:
+      - name: github_repos
+        description: "REAL. Public repos of the owner, from the GitHub REST API."
+      - name: github_runs
+        description: "REAL. Every GitHub Actions workflow run, incrementally collected."
+      - name: github_jobs
+        description: "REAL. Jobs within those runs (collected in CI, where the API allows enough requests)."
+      - name: sf_warehouses
+        description: "SYNTHETIC, shaped like SHOW WAREHOUSES."
+      - name: sf_tag_references
+        description: "SYNTHETIC, shaped like ACCOUNT_USAGE.TAG_REFERENCES (COST_CENTER tag)."
+      - name: sf_resource_monitors
+        description: "SYNTHETIC, shaped like ACCOUNT_USAGE.RESOURCE_MONITORS."
+      - name: sf_warehouse_metering_history
+        description: "SYNTHETIC, shaped like ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY (hourly credits)."
+      - name: sf_query_history
+        description: "SYNTHETIC, shaped like ACCOUNT_USAGE.QUERY_HISTORY (a subset of columns)."
+      - name: ft_connector
+        description: "SYNTHETIC, shaped like the Fivetran Platform Connector CONNECTOR table."
+      - name: ft_log
+        description: "SYNTHETIC, shaped like the Fivetran Platform Connector LOG table."
+
+  - name: config
+    schema: config
+    tables:
+      - name: close_critical_connectors
+        description: "The connectors that feed month-end close, as finance maintains it."
+      - name: close_windows
+        description: "Month-end close windows: the last 2 business days through the 3rd business day."
+
+  - name: answer_key
+    schema: answer_key
+    description: "Planted ground truth. Only tests may read it; tests/assert_detection_never_reads_answer_key.sql enforces that."
+    tables:
+      - name: cost_spikes
+      - name: no_monitor
+      - name: idle_burn
+      - name: unused
+      - name: incidents
+      - name: close_alerts
