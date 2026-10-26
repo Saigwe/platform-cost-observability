@@ -134,7 +134,7 @@ make all
 - [x] Daily digest to a branch, optional Slack
 - [ ] Point it at a real Snowflake account (`ACCOUNT_USAGE` views) and a real Fivetran Platform Connector
 - [x] Job-level minutes and queue time by repo
-- [ ] 3-minute Loom walkthrough
+- [ ] 3-minute Loom walkthrough ([script ready](docs/walkthrough.md))
 
 ## Data and licence
 - **GitHub Actions history:** my own public repositories, via the GitHub REST API.
