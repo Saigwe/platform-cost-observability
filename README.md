@@ -19,7 +19,7 @@ Based on work I did as an independent consultant for a US food-delivery company:
 | **Problem** | Warehouse bills grow quietly, nobody notices a connector that stopped syncing until finance can't close the month, and CI failures sit red for days. Each lives in a different console. |
 | **What I built** | Incremental collection of every GitHub Actions run and job across my repos; generators for Snowflake `ACCOUNT_USAGE` and Fivetran Platform Connector tables with planted cost spikes, uncapped warehouses, idle burn, unused warehouses, connector outages and close-window failures; dbt models that detect each one; a daily digest. |
 | **Why it matters** | One morning report: what's red, what costs too much and why, and which close-critical feed is down, ranked by money or by risk to the books. |
-| **Proof** | Every detector finds **exactly** the planted problems (an answer-key test per detector, from my own test package), and a lineage test proves no model reads the answers. On real CI: 131 runs across 22 repos, 79.4% green, failures fixed in 0.34 hours on average, and 3 older repos still red. See [Numbers](#numbers). |
+| **Proof** | Every detector finds **exactly** the planted problems (an answer-key test per detector, from my own test package), and a lineage test proves no model reads the answers. On real CI: 132 runs across 22 repos, 79.5% green, failures fixed in 0.34 hours on average, and 3 older repos still red. See [Numbers](#numbers). |
 
 ## Architecture
 ```mermaid
@@ -40,8 +40,8 @@ flowchart LR
 ## Data
 | Source | Shaped like | Rows | Real or synthetic |
 |---|---|---:|---|
-| GitHub Actions runs, all public repos of Saigwe | GitHub REST API `actions/runs` | 138 runs (and growing daily) | **Real** |
-| GitHub Actions jobs | `actions/runs/{id}/jobs` | collected by the daily job (needs a token) | **Real** |
+| GitHub Actions runs, all public repos of Saigwe | GitHub REST API `actions/runs` | 141 runs (and growing daily) | **Real** |
+| GitHub Actions jobs | `actions/runs/{id}/jobs` | 261 jobs (collected in Actions, with the workflow token) | **Real** |
 | Snowflake warehouses, tags, resource monitors | `SHOW WAREHOUSES`, `TAG_REFERENCES`, `RESOURCE_MONITORS` | 165 warehouses, 8 monitors | Synthetic |
 | Snowflake metering | `ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY` | 200,633 hours, 386,721 credits | Synthetic |
 | Snowflake queries | `ACCOUNT_USAGE.QUERY_HISTORY` | 2,413,268 queries | Synthetic |
@@ -75,10 +75,11 @@ From `make all` on 26 Oct 2026.
 
 | Metric | Value |
 |---|---|
-| Repos with Actions history / runs | 22 / 131 |
-| Success rate | 79.4% (27 failed runs) |
+| Repos with Actions history / runs | 22 / 132 |
+| Success rate | 79.5% (27 failed runs) |
 | Median run duration (median across repos) | 0.9 min |
 | Average time from a failure to the next green run | 0.34 hours |
+| Billable minutes / average queue time | 348 minutes across 261 jobs; 3.9 s queue. The portfolio site uses the most (97) |
 | Repos still red on main | 3 older repos: `ae_clone_dbt` and `ae_stanley_igwe_monzo` have never passed; `ae_stanley_tasks` has been red since its last 2 failures |
 
 **Warehouse cost (synthetic, at an assumed $3.00 per credit)**
@@ -132,7 +133,7 @@ make all
 - [x] Fivetran health: incidents, month-end close alerts, with answer keys
 - [x] Daily digest to a branch, optional Slack
 - [ ] Point it at a real Snowflake account (`ACCOUNT_USAGE` views) and a real Fivetran Platform Connector
-- [ ] Job-level cost: GitHub Actions minutes by repo once the daily job has collected jobs
+- [x] Job-level minutes and queue time by repo
 - [ ] 3-minute Loom walkthrough
 
 ## Data and licence
