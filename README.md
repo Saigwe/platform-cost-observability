@@ -21,6 +21,13 @@ Based on work I did as an independent consultant for a US food-delivery company:
 | **Why it matters** | One morning report: what's red, what costs too much and why, and which close-critical feed is down, ranked by money or by risk to the books. |
 | **Proof** | Every detector finds **exactly** the planted problems (an answer-key test per detector, from my own test package), and a lineage test proves no model reads the answers. On real CI: 132 runs across 22 repos, 79.5% green, failures fixed in 0.34 hours on average, and 3 older repos still red. See [Numbers](#numbers). |
 
+## Charts
+Rendered from this repo's own results by `charts/make_charts.py` (`make charts`); CI re-renders them on every push.
+
+![Monthly warehouse spend stacked by cost center](docs/charts/cost_by_cost_center.png)
+
+![Daily credits for the warehouse with the largest detected spike, against its alert line](docs/charts/cost_spike.png)
+
 ## Architecture
 ```mermaid
 flowchart LR

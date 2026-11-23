@@ -5,7 +5,7 @@ DBT_BIN ?= dbt
 DBT = cd dbt && DUCKDB_PATH=../$(DB) $(DBT_BIN)
 JOBS ?=
 
-.PHONY: all collect generate load dbt digest test clean
+.PHONY: all collect generate load dbt digest test clean charts
 
 all: collect generate load dbt digest test   ## real CI history + synthetic Snowflake/Fivetran -> dbt -> digest -> tests
 
@@ -31,3 +31,6 @@ test:
 
 clean:
 	rm -rf warehouse dbt/target dbt/logs dbt/dbt_packages
+
+charts:                                            ## README charts -> docs/charts
+	$(PY) charts/make_charts.py

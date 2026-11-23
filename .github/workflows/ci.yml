@@ -19,3 +19,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make all
+      - name: README charts render from the results
+        run: python charts/make_charts.py --out "$RUNNER_TEMP/charts"
